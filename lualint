@@ -305,12 +305,12 @@ local function lint(filename, relaxed)
     if relaxed and was_set[name] then
       return false
     end
-    if name == self_name or
-      lint_ignored[name] or
-      ignoreget[name] or
-      moduleset[name] or
-      declaredset[name] or
-      imported_declare_set[name] then
+    if name == self_name
+      or lint_ignored[name]
+      or ignoreget[name]
+      or moduleset[name]
+      or declaredset[name]
+      or imported_declare_set[name] then
       return false
     end
     return true
