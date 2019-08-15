@@ -153,17 +153,17 @@ local function scanfile(filename)
   local context, curfunc
 
   if not fileexists(filename) then
-    return nil, "file "..filename.." does not exist"
+    return nil, string.format("file %s does not exist", filename)
   end
 
   -- Run once to see if it parses correctly
   
   if not os.execute("luac -o lualint.tmp "..filename) then
-    return nil, "file "..filename.." did not successfully parse"
+    return nil, string.format("file %s did not successfully parse", filename)
   end
 
   if not fileexists("lualint.tmp") then
-    return nil, "file "..filename.." did not successfully parse"
+    return nil, string.format("file %s did not successfully parse", filename)
   end
 
   assert(os.remove("lualint.tmp"))
