@@ -86,7 +86,7 @@ tricks in MOO.
 
 local function Set(l) 
   local t = {}
-  for _,v in ipairs(l) do
+  for _, v in ipairs(l) do
     t[v] = true
   end
   return t
@@ -158,7 +158,7 @@ local function scanfile(filename)
 
   -- Run once to see if it parses correctly
   
-  if not os.execute("luac -o lualint.tmp "..filename) then
+  if not os.execute("luac -o lualint.tmp " .. filename) then
     return nil, string.format("file %s did not successfully parse", filename)
   end
 
@@ -168,7 +168,7 @@ local function scanfile(filename)
 
   assert(os.remove("lualint.tmp"))
 
-  local bc = assert(io.popen("luac -l -p "..filename))
+  local bc = assert(io.popen("luac -l -p " .. filename))
   
   for line in bc:lines() do
     -- main <examples/xhtml2wiki.lua:0> (64 instructions, 256 bytes at 0x805c1a0)
@@ -199,8 +199,9 @@ local function scanfile(filename)
     -- 	4	[2]	GETGLOBAL	0 0	; require
     local found, _, lineno, instr, gname = string.find(line, "%[(%d+)%]%s+([SG]ETGLOBAL).-; (.+)")
     if found then
-      local t = refs[curfunc] or {SETGLOBAL={n=0}, GETGLOBAL={n=0}}
-      local err = {name=gname, lineno=lineno}
+      local t = (refs[curfunc]
+                   or { SETGLOBAL = { n = 0 }, GETGLOBAL = { n = 0 } })
+      local err = { name = gname, lineno = lineno }
       table.insert(t[instr], err)
       refs[curfunc] = t
       saw_last = gname
@@ -237,14 +238,14 @@ end
 local function print_lint_output()
    -- Prints all errors sorted by row number
 
-   local function row_compare(a,b)
+   local function row_compare(a, b)
       -- a[1] and b[1] contains the row numbers for the errors
       return tonumber(a[1]) < tonumber(b[1])
    end
 
-   for file,info in pairs(g_output) do
+   for file, info in pairs(g_output) do
       table.sort(info, row_compare)
-      for k,error in pairs(info) do
+      for k, error in pairs(info) do
 	 -- error[1] is the row and error[2] is the description
       	 print(string.format("%s:%d: %s", file, error[1], error[2]))
       end
@@ -262,7 +263,7 @@ local function lint(filename, relaxed)
   end
   
   local imported_declare_set = {}
-  for i,module in ipairs(modules) do
+  for i, module in ipairs(modules) do
     local path = locate(module)
     if not path then
       lint_output(filename, 1,
@@ -277,7 +278,7 @@ local function lint(filename, relaxed)
                                   imported_declare))
         import_failed = true
       else
-        for i,declared in ipairs(imported_declare) do
+        for i, declared in ipairs(imported_declare) do
           imported_declare_set[declared] = true
         end
       end
@@ -293,7 +294,7 @@ local function lint(filename, relaxed)
     if string.find(filename, "/") then
       _, _, self_name = string.find(filename, ".-/(%w+)%.lua")
     else
-      _,_,self_name = string.find(filename, "(%w+)%.lua")
+      _, _, self_name = string.find(filename, "(%w+)%.lua")
     end
   end
   -- print("selfname", self_name)
@@ -315,8 +316,8 @@ local function lint(filename, relaxed)
     return true
   end
 
-  for f,t in pairs(refs) do
-    for _,r in ipairs(t.SETGLOBAL) do
+  for f, t in pairs(refs) do
+    for _, r in ipairs(t.SETGLOBAL) do
       if r.name ~= self_name and not declaredset[r.name] then
         was_set[r.name] = true
         if not relaxed then
@@ -328,8 +329,8 @@ local function lint(filename, relaxed)
     end
   end
 
-  for f,t in pairs(refs) do
-    for _,r in ipairs(t.GETGLOBAL) do
+  for f, t in pairs(refs) do
+    for _, r in ipairs(t.GETGLOBAL) do
       if will_warn_for(r.name) then
         lint_output(filename, r.lineno,
                     string.format("*** global get of %s", r.name))
@@ -346,7 +347,7 @@ end
 
 local relaxed_mode = false
 
-for i,v in ipairs(arg) do
+for i, v in ipairs(arg) do
   if v == "-r" then
     relaxed_mode = true
   elseif v == "-s" then
