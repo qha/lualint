@@ -122,7 +122,7 @@ local function locate(name)
     paths = LUA_PATH
   else
     -- Try to get the LUA_PATH env variable
-    local env_lua_path = os.getenv "LUA_PATH"
+    local env_lua_path = os.getenv("LUA_PATH")
     if type(env_lua_path) == "string" then
       paths = env_lua_path
     end
