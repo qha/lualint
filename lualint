@@ -93,13 +93,13 @@ local function Set(l)
 end
 
 local ignoreget = Set{
-"LUA_PATH", "_G", "_LOADED", "_TRACEBACK", "_VERSION", "__pow", "arg",
-"assert", "collectgarbage", "coroutine", "debug", "dofile", "error",
-"gcinfo", "getfenv", "getmetatable", "io", "ipairs", "loadfile",
-"loadlib", "loadstring", "math", "newproxy", "next", "os", "pairs",
-"pcall", "print", "rawequal", "rawget", "rawset", "require",
-"setfenv", "setmetatable", "string", "table", "tonumber", "tostring",
-"type", "unpack", "xpcall",
+  "LUA_PATH", "_G", "_LOADED", "_TRACEBACK", "_VERSION", "__pow",
+  "arg", "assert", "collectgarbage", "coroutine", "debug", "dofile",
+  "error", "gcinfo", "getfenv", "getmetatable", "io", "ipairs",
+  "loadfile", "loadlib", "loadstring", "math", "newproxy", "next",
+  "os", "pairs", "pcall", "print", "rawequal", "rawget", "rawset",
+  "require", "setfenv", "setmetatable", "string", "table", "tonumber",
+  "tostring", "type", "unpack", "xpcall",
 }
 
 local function fileexists(fname)
@@ -175,7 +175,9 @@ local function scanfile(filename)
     -- function <examples/xhtml2wiki.lua:13> (6 instructions, 24 bytes at 0x805c438)
     local found, _, type, fname = string.find(line, "(%w+) <([^>]+)>")
     if found then 
-      if context == "main" then fname="*MAIN*" end
+      if context == "main" then
+        fname = "*MAIN*"
+      end
       curfunc = fname
     end
     
@@ -253,7 +255,8 @@ local function lint(filename, relaxed)
   local modules, declared, lint_ignored, refs = scanfile(filename)
 
   if not modules then
-    lint_output(filename, 1, string.format("*** could not parse: %s ",declared))
+    lint_output(filename, 1, string.format("*** could not parse: %s ",
+                                           declared))
     parse_failed = true
     return
   end
@@ -261,13 +264,17 @@ local function lint(filename, relaxed)
   local imported_declare_set = {}
   for i,module in ipairs(modules) do
     local path = locate(module)
-    if not path then 
-      lint_output(filename, 1, string.format("*** could not find imported module %s ", module))
+    if not path then
+      lint_output(filename, 1,
+                  string.format("*** could not find imported module %s ",
+                                module))
       import_failed = true
     else
       local success, imported_declare, _, _ = scanfile(path)
       if not success then
-        lint_output(path, 1, string.format("*** could not parse import: %s ", imported_declare))
+        lint_output(path, 1,
+                    string.format("*** could not parse import: %s ",
+                                  imported_declare))
         import_failed = true
       else
         for i,declared in ipairs(imported_declare) do
@@ -313,7 +320,8 @@ local function lint(filename, relaxed)
       if r.name ~= self_name and not declaredset[r.name] then
         was_set[r.name] = true
         if not relaxed then
-          lint_output(filename, r.lineno, string.format("*** global SET of %s", r.name))
+          lint_output(filename, r.lineno,
+                      string.format("*** global SET of %s", r.name))
           found_sets = true
         end
       end
@@ -323,7 +331,8 @@ local function lint(filename, relaxed)
   for f,t in pairs(refs) do
     for _,r in ipairs(t.GETGLOBAL) do
       if will_warn_for(r.name) then
-        lint_output(filename, r.lineno, string.format("*** global get of %s", r.name))
+        lint_output(filename, r.lineno,
+                    string.format("*** global get of %s", r.name))
         found_gets = true
       end
     end
