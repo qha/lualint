@@ -83,6 +83,10 @@ tricks in MOO.
  
 ]]
 
+if _VERSION < "Lua 5.1" then
+  -- https://www.lua.org/manual/5.1/manual.html#7.2
+  string.gmatch = string.gfind
+end
 
 --- Create a set from a list of members.
 -- The set is simulated by a table where the key of every member of
@@ -114,16 +118,24 @@ local ignoreget = Set{
 }
 
 local ignorerequire = Set{
+  "_G",
   "coroutine",
-  "package",
   "string",
-  "utf8",
   "table",
   "math",
   "io",
   "os",
   "debug",
 }
+if type(package.loaded) == "table" then
+  extend(ignorerequire, package.loaded)
+end
+if _VERSION >= "Lua 5.1" then
+  extend(ignorerequire, { "package" })
+end
+if _VERSION >= "Lua 5.3" then
+  extend(ignorerequire, { "utf8" })
+end
 
 local function fileexists(fname)
   local f = io.open(fname)
@@ -137,13 +149,21 @@ end
 
 -- borrowed from LTN11
 local function locate(name)
-
   local paths = ""
 
-  if type(LUA_PATH) == "string" then
-    -- Use the LUA_PATH variable
-    paths = LUA_PATH
+  if _VERSION < "Lua 5.1" then
+    -- https://www.lua.org/manual/5.1/manual.html#7.2
+    if type(LUA_PATH) == "string" then
+      -- Use the LUA_PATH variable
+      paths = LUA_PATH
+    end
   else
+    if type(package.path) == "string" then
+      paths = package.path
+    end
+  end
+
+  if not #paths then
     -- Try to get the LUA_PATH env variable
     local env_lua_path = os.getenv("LUA_PATH")
     if type(env_lua_path) == "string" then
@@ -154,7 +174,7 @@ local function locate(name)
   -- Add current directory
   paths = paths .. ";./?.lua"
 
-  for path in string.gfind(paths, "[^;]+") do
+  for path in string.gmatch(paths, "[^;]+") do
     -- Construct full filename from path, module name and file extension
     path = string.gsub(path, "?", name)
 
@@ -219,13 +239,24 @@ local function scanfile(filename)
       end
     end
     
+    -- Lua < 5.2:
     -- 	4	[2]	GETGLOBAL	0 0	; require
-    local found, _, lineno, instr, gname = string.find(line, "%[(%d+)%]%s+([SG]ETGLOBAL).-; (.+)")
+    -- Lua >= 5.2:
+    --  1       [1]     GETTABUP        0 0 -1  ; _ENV "require"
+    local globalpattern
+    -- Assume luac is the same version as the lua that interprets this
+    -- program.
+    if _VERSION < "Lua 5.2" then
+      globalpattern = "%[(%d+)%]%s+([SG])ETGLOBAL.-; (.+)"
+    else
+      globalpattern = '%[(%d+)%]%s+([SG])ETTABUP.-; _ENV "(.-)"'
+    end
+    local found, _, lineno, instr, gname = string.find(line, globalpattern)
     if found then
       local t = (refs[curfunc]
                    or { SETGLOBAL = { n = 0 }, GETGLOBAL = { n = 0 } })
       local err = { name = gname, lineno = lineno }
-      table.insert(t[instr], err)
+      table.insert(t[instr .. "ETGLOBAL"], err)
       refs[curfunc] = t
       saw_last = gname
     else
