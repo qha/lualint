@@ -102,6 +102,18 @@ local ignoreget = Set{
   "tostring", "type", "unpack", "xpcall",
 }
 
+local ignorerequire = Set{
+  "coroutine",
+  "package",
+  "string",
+  "utf8",
+  "table",
+  "math",
+  "io",
+  "os",
+  "debug",
+}
+
 local function fileexists(fname)
   local f = io.open(fname)
   if f then 
@@ -264,22 +276,24 @@ local function lint(filename, relaxed)
   
   local imported_declare_set = {}
   for i, module in ipairs(modules) do
-    local path = locate(module)
-    if not path then
-      lint_output(filename, 1,
-                  string.format("*** could not find imported module %s ",
-                                module))
-      import_failed = true
-    else
-      local success, imported_declare, _, _ = scanfile(path)
-      if not success then
-        lint_output(path, 1,
-                    string.format("*** could not parse import: %s ",
-                                  imported_declare))
+    if not ignorerequire[module] then
+      local path = locate(module)
+      if not path then
+        lint_output(filename, 1,
+                    string.format("*** could not find imported module %s ",
+                                  module))
         import_failed = true
       else
-        for i, declared in ipairs(imported_declare) do
-          imported_declare_set[declared] = true
+        local success, imported_declare, _, _ = scanfile(path)
+        if not success then
+          lint_output(path, 1,
+                      string.format("*** could not parse import: %s ",
+                                    imported_declare))
+          import_failed = true
+        else
+          for i, declared in ipairs(imported_declare) do
+            imported_declare_set[declared] = true
+          end
         end
       end
     end
