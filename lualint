@@ -117,6 +117,9 @@ local ignoreget = Set{
   "tostring", "type", "unpack", "xpcall",
 }
 
+local ignoreset = Set{
+}
+
 local ignorerequire = Set{
   "_G",
   "coroutine",
@@ -372,7 +375,9 @@ local function lint(filename, relaxed)
 
   for f, t in pairs(refs) do
     for _, r in ipairs(t.SETGLOBAL) do
-      if r.name ~= self_name and not declaredset[r.name] then
+      if r.name ~= self_name
+        and not declaredset[r.name]
+        and not ignoreset[r.name] then
         was_set[r.name] = true
         if not relaxed then
           lint_output(filename, r.lineno,
