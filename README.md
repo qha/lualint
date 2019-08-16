@@ -61,6 +61,44 @@ don't have to do anything, or in fact actually exist! They can be in dead code:
 This is because lualint only performs a rather primitive and cursory scan of
 the bytecode. Perhaps declarations should only be allowed in the main chunk.
 
+lualint also has sets of variable names that are always ok to get
+(**ignoreget**) and set (**ignoreset**) and modules that are ok to
+require even though they are not available in the package.path
+(**ignorerequire**).
+
+You can to replace or extend these sets by writing a lualint.rc in the
+current working directory with lists of variable and module names to
+replace any of the sets in tables with the same names or to extend
+them with in **extendignoreget**, **extendignoreset** and
+**extendignorerequire**. For instance with Nmap scripts you might want
+to put this in lualint.rc rather than using declare and lint_ignore in
+each script:
+
+
+    extendignoreget = {
+       'SCRIPT_PATH',
+       'SCRIPT_NAME',
+       'SCRIPT_TYPE',
+    }
+
+    extendignoreset = {
+       'description',
+       'categories',
+       'author',
+       'copyright',
+       'license',
+       'dependencies',
+       'prerule',
+       'hostrule',
+       'portrule',
+       'postrule',
+       'action',
+    }
+
+    extendignorerequire = {
+       'nmap',
+    }
+
 ## TODO
 
 The errors don't come out in any particular order.

@@ -67,6 +67,43 @@ This is because lualint only performs a rather primitive and cursory
 scan of the bytecode.  Perhaps declarations should only be allowed in
 the main chunk.
 
+lualint also has sets of variable names that are always ok to get
+(ignoreget) and set (ignoreset) and modules that are ok to require
+even though they are not available in the package.path
+(ignorerequire).
+
+You can to replace or extend these sets by writing a lualint.rc in the
+current working directory with lists of variable and module names to
+replace any of the sets in tables with the same names or to extend
+them with in extendignoreget, extendignoreset and extendignorerequire.
+For instance with Nmap scripts you might want to put this in
+lualint.rc rather than using declare and lint_ignore in each script:
+
+  extendignoreget = {
+     'SCRIPT_PATH',
+     'SCRIPT_NAME',
+     'SCRIPT_TYPE',
+  }
+
+  extendignoreset = {
+     'description',
+     'categories',
+     'author',
+     'copyright',
+     'license',
+     'dependencies',
+     'prerule',
+     'hostrule',
+     'portrule',
+     'postrule',
+     'action',
+  }
+
+  extendignorerequire = {
+     'nmap',
+  }
+
+
 TODO:
 
 The errors don't come out in any particular order.
@@ -138,6 +175,36 @@ if _VERSION >= "Lua 5.1" then
 end
 if _VERSION >= "Lua 5.3" then
   extend(ignorerequire, { "utf8" })
+end
+
+local function loadconfig(fn)
+  local config = {}
+  local applyconfig, err = loadfile(fn, "t", config)
+  if applyconfig then
+    applyconfig()
+    if config.ignoreget then
+      ignoreget = Set{config.ignoreget}
+    end
+    if config.extendignoreget then
+      extend(ignoreget, config.extendignoreget)
+    end
+    if config.ignoreset then
+      ignoreset = Set{config.ignoreset}
+    end
+    if config.extendignoreset then
+      extend(ignoreset, config.extendignoreset)
+    end
+    if config.ignorerequire then
+      ignorerequire = Set{config.ignorerequire}
+    end
+    if config.extendignorerequire then
+      extend(ignorerequire, config.extendignorerequire)
+    end
+    return true
+  else
+    print(err)
+    return false
+  end
 end
 
 local function fileexists(fname)
@@ -402,6 +469,12 @@ end
 if arg.n == 0 then
   print("usage: lualint filename.lua [filename.lua ...]")
   os.exit(1)
+end
+
+local configfn = "lualint.rc"
+if fileexists(configfn) and not loadconfig(configfn) then
+  print("error loading " .. configfn)
+  os.exit(4)
 end
 
 local relaxed_mode = false
