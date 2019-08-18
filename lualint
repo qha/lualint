@@ -84,12 +84,23 @@ tricks in MOO.
 ]]
 
 
-local function Set(l) 
-  local t = {}
-  for _, v in ipairs(l) do
-    t[v] = true
+--- Create a set from a list of members.
+-- The set is simulated by a table where the key of every member of
+-- the set has the value true.
+-- Return the table representing the set.
+local function Set(members)
+  local set = {}
+  for _, member in ipairs(members) do
+    set[member] = true
   end
-  return t
+  return set
+end
+
+--- Extend a set created by Set.
+local function extend(set, newmembers)
+  for _, member in ipairs(newmembers) do
+    set[member] = true
+  end
 end
 
 local ignoreget = Set{
