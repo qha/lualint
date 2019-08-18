@@ -333,9 +333,7 @@ local function lint(filename, relaxed)
                                     imported_declare))
           import_failed = true
         else
-          for i, declared in ipairs(imported_declare) do
-            imported_declare_set[declared] = true
-          end
+          extend(imported_declare_set, imported_declare)
         end
       end
     end
