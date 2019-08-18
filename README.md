@@ -52,6 +52,7 @@ One way of defining these is in a module "declare.lua":
     declare "lint_ignore"
     function lint_ignore(s)
     end
+    return declare
 
 (Setting declare is OK, because it's in the "declare" module.) These functions
 don't have to do anything, or in fact actually exist! They can be in dead code:
